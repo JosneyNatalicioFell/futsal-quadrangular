@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quadrangular Sub-15 - Simulador</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f3f4f6;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .app {
+      background: #ffffff;
+      width: 100%;
+      max-width: 520px;
+      padding: 16px;
+      border-radius: 18px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      margin: 12px;
+    }
+
+    h1 {
+      text-align: center;
+      margin: 0 0 4px;
+      font-size: 1.3rem;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin-bottom: 10px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-size: 0.75rem;
+      margin-bottom: 10px;
+    }
+
+    .teams-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    label {
+      font-size: 0.8rem;
+      color: #4b5563;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 10px;
+      border: 1px solid #d1d5db;
+      font-size: 0.85rem;
+    }
+
+    input[type="number"] {
+      text-align: center;
+      -moz-appearance: textfield;
+    }
+
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .section-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin: 10px 0 6px;
+      color: #374151;
+    }
+
+    .matches {
+      background: #f9fafb;
+      border-radius: 14px;
+      padding: 8px;
+      border: 1px solid #e5e7eb;
+      margin-bottom: 10px;
+    }
+
+    .match-row {
+      display: grid;
+      grid-template-columns: 1.2fr auto 1.2fr;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 6px;
+      font-size: 0.8rem;
+    }
+
+    .match-team {
+      text-align: center;
+      padding: 2px 4px;
+    }
+
+    .match-score {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 3px;
+      align-items: center;
+    }
+
+    .match-score span {
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .buttons-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+      justify-content: center;
+    }
+
+    button {
+      border: none;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      background: #e5e7eb;
+    }
+
+    button:active {
+      transform: scale(0.97);
+    }
+
+    .btn-primary {
+      background: #2563eb;
+      color: #ffffff;
+    }
+
+    .btn-danger {
+      background: #ef4444;
+      color: #ffffff;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+    }
+
+    th, td {
+      padding: 4px;
+      text-align: center;
+      border-bottom: 1px solid #e5e7eb;
+      white-space: nowrap;
+    }
+
+    th {
+      font-weight: 600;
+      font-size: 0.75rem;
+      color: #374151;
+      background: #f3f4f6;
+    }
+
+    td.team-name {
+      text-align: left;
+    }
+
+    tr:nth-child(even) td {
+      background: #fafafa;
+    }
+
+    .leader {
+      background: #ecfdf5 !important;
+    }
+
+    .warning {
+      font-size: 0.72rem;
+      color: #b45309;
+      margin-top: 6px;
+    }
+
+    .note {
+      font-size: 0.72rem;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+
+    .footer {
+      margin-top: 8px;
+      font-size: 0.7rem;
+      text-align: center;
+      color: #9ca3af;
+    }
+
+    @media (max-width: 420px) {
+      .app {
+        border-radius: 0;
+        margin: 0;
+        min-height: 100vh;
+      }
+
+      h1 {
+        font-size: 1.15rem;
+      }
+
+      th, td {
+        padding: 3px 2px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>Quadrangular Sub-15</h1>
+    <div class="subtitle">Simulador de classificação - pontos corridos</div>
+    <div class="badge">Categoria Sub-15 · 2 tempos de 15 min (cronômetro) </div>
+
+    <!-- Nomes dos times -->
+    <div class="section-title">Times</div>
+    <div class="teams-grid">
+      <div>
+        <label for="t1">Time 1</label>
+        <input type="text" id="t1" value="Time A" />
+      </div>
+      <div>
+        <label for="t2">Time 2</label>
+        <input type="text" id="t2" value="Time B" />
+      </div>
+      <div>
+        <label for="t3">Time 3</label>
+        <input type="text" id="t3" value="Time C" />
+      </div>
+      <div>
+        <label for="t4">Time 4</label>
+        <input type="text" id="t4" value="Time D" />
+      </div>
+    </div>
+
+    <!-- Jogos do quadrangular -->
+    <div class="section-title">Jogos do quadrangular (fase única)</div>
+    <div class="matches" id="matches">
+      <!-- 6 jogos fixos do quadrangular -->
+      <div class="match-row" data-match="0">
+        <div class="match-team" data-side="home" data-index="0"></div>
+        <div class="match-score">
+          <input type="number" min="0" inputmode="numeric" class="score-home" />
+          <span>x</span>
+          <input type="number" min="0" inputmode="numeric" class="score-away" />
+        </div>
+        <div class="match-team" data-side="away" data-index="1"></div>
+      </div>
+
+      <div class="match-row" data-match="1">
+        <div class="match-team" data-side="home" data-index="2"></div>
+        <div class="match-score">
+          <input type="number" min="0" inputmode="numeric" class="score-home" />
+          <span>x</span>
+          <input type="number" min="0" inputmode="numeric" class="score-away" />
+        </div>
+        <div class="match-team" data-side="away" data-index="3"></div>
+      </div>
+
+      <div class="match-row" data-match="2">
+        <div class="match-team" data-side="home" data-index="0"></div>
+        <div class="match-score">
+          <input type="number" min="0" inputmode="numeric" class="score-home" />
+          <span>x</span>
+          <input type="number" min="0" inputmode="numeric" class="score-away" />
+        </div>
+        <div class="match-team" data-side="away" data-index="2"></div>
+      </div>
+
+      <div class="match-row" data-match="3">
+        <div class="match-team" data-side="home" data-index="1"></div>
+        <div class="match-score">
+          <input type="number" min="0" inputmode="numeric" class="score-home" />
+          <span>x</span>
+          <input type="number" min="0" inputmode="numeric" class="score-away" />
+        </div>
+        <div class="match-team" data-side="away" data-index="3"></div>
+      </div>
+
+      <div class="match-row" data-match="4">
+        <div class="match-team" data-side="home" data-index="0"></div>
+        <div class="match-score">
+          <input type="number" min="0" inputmode="numeric" class="score-home" />
+          <span>x</span>
+          <input type="number" min="0" inputmode="numeric" class="score-away" />
+        </div>
+        <div class="match-team" data-side="away" data-index="3"></div>
+      </div>
+
+      <div class="match-row" data-match="5">
+        <div class="match-team" data-side="home" data-index="1"></div>
+        <div class="match-score">
+          <input type="number" min="0" inputmode="numeric" class="score-home" />
+          <span>x</span>
+          <input type="number" min="0" inputmode="numeric" class="score-away" />
+        </div>
+        <div class="match-team" data-side="away" data-index="2"></div>
+      </div>
+
+      <div class="buttons-row">
+        <button class="btn-primary" id="btnRecalcular">Recalcular tabela</button>
+        <button class="btn-danger" id="btnLimpar">Limpar tudo</button>
+      </div>
+    </div>
+
+    <!-- Tabela de classificação -->
+    <div class="section-title">Classificação</div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Time</th>
+            <th>J</th>
+            <th>V</th>
+            <th>E</th>
+            <th>D</th>
+            <th>GP</th>
+            <th>GC</th>
+            <th>SG</th>
+            <th>Pts</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyTabela">
+        </tbody>
+      </table>
+    </div>
+
+    <div class="warning" id="tieWarning" style="display:none;">
+      Há times empatados em pontos. Para decisão oficial, use os critérios do regulamento
+      (confronto direto, vitórias, saldo, média de gols, melhor defesa, cartões, etc.).
+    </div>
+
+    <div class="note">
+      Pontos usados no simulador: <strong>Vitória = 3 · Empate = 1 · Derrota = 0</strong> (padrão futsal).
+      Ajuste manualmente se o regulamento da etapa usar pontuação diferente.
+    </div>
+
+    <div class="footer">
+      Funciona offline. Abra o HTML no navegador do celular e adicione à tela inicial.
+    </div>
+  </div>
+
+  <script>
+    // ---- Dados de times e jogos ----
+    const teamInputs = [
+      document.getElementById("t1"),
+      document.getElementById("t2"),
+      document.getElementById("t3"),
+      document.getElementById("t4"),
+    ];
+
+    const matchesConfig = [
+      [0, 1], // Jogo 1: 1 x 2
+      [2, 3], // Jogo 2: 3 x 4
+      [0, 2], // Jogo 3: 1 x 3
+      [1, 3], // Jogo 4: 2 x 4
+      [0, 3], // Jogo 5: 1 x 4
+      [1, 2], // Jogo 6: 2 x 3
+    ];
+
+    const matchesContainer = document.getElementById("matches");
+    const tbodyTabela = document.getElementById("tbodyTabela");
+    const tieWarning = document.getElementById("tieWarning");
+    const btnRecalcular = document.getElementById("btnRecalcular");
+    const btnLimpar = document.getElementById("btnLimpar");
+
+    // Atualiza os nomes nos "versus" dos jogos
+    function atualizarNomesNosJogos() {
+      const rows = matchesContainer.querySelectorAll(".match-row");
+      rows.forEach((row, idx) => {
+        const [homeIdx, awayIdx] = matchesConfig[idx];
+        const homeLabel = row.querySelector('[data-side="home"]');
+        const awayLabel = row.querySelector('[data-side="away"]');
+        homeLabel.textContent = teamInputs[homeIdx].value || "Time " + (homeIdx + 1);
+        awayLabel.textContent = teamInputs[awayIdx].value || "Time " + (awayIdx + 1);
+      });
+    }
+
+    teamInputs.forEach((inp) => {
+      inp.addEventListener("input", () => {
+        atualizarNomesNosJogos();
+        recalcularTabela();
+      });
+    });
+
+    // Lê todos os jogos e monta estatísticas
+    function recalcularTabela() {
+      // Inicializa stats
+      const stats = [
+        { index: 0, nome: teamInputs[0].value || "Time A", j: 0, v: 0, e: 0, d: 0, gp: 0, gc: 0, sg: 0, pts: 0 },
+        { index: 1, nome: teamInputs[1].value || "Time B", j: 0, v: 0, e: 0, d: 0, gp: 0, gc: 0, sg: 0, pts: 0 },
+        { index: 2, nome: teamInputs[2].value || "Time C", j: 0, v: 0, e: 0, d: 0, gp: 0, gc: 0, sg: 0, pts: 0 },
+        { index: 3, nome: teamInputs[3].value || "Time D", j: 0, v: 0, e: 0, d: 0, gp: 0, gc: 0, sg: 0, pts: 0 },
+      ];
+
+      const rows = matchesContainer.querySelectorAll(".match-row");
+
+      rows.forEach((row, idx) => {
+        const [homeIdx, awayIdx] = matchesConfig[idx];
+        const homeInput = row.querySelector(".score-home");
+        const awayInput = row.querySelector(".score-away");
+
+        const gh = homeInput.value === "" ? null : parseInt(homeInput.value, 10);
+        const ga = awayInput.value === "" ? null : parseInt(awayInput.value, 10);
+
+        // Se não preencheu os dois placares, ignora o jogo
+        if (gh === null || ga === null || isNaN(gh) || isNaN(ga)) return;
+
+        const home = stats[homeIdx];
+        const away = stats[awayIdx];
+
+        home.j++;
+        away.j++;
+
+        home.gp += gh;
+        home.gc += ga;
+        away.gp += ga;
+        away.gc += gh;
+
+        if (gh > ga) {
+          // casa venceu
+          home.v++;
+          away.d++;
+          home.pts += 3;
+        } else if (gh < ga) {
+          // visitante venceu
+          away.v++;
+          home.d++;
+          away.pts += 3;
+        } else {
+          // empate
+          home.e++;
+          away.e++;
+          home.pts += 1;
+          away.pts += 1;
+        }
+      });
+
+      // Recalcula saldo
+      stats.forEach((s) => {
+        s.sg = s.gp - s.gc;
+      });
+
+      // Verifica se há empate em pontos
+      let existeEmpate = false;
+      for (let i = 0; i < stats.length; i++) {
+        for (let j = i + 1; j < stats.length; j++) {
+          if (stats[i].pts === stats[j].pts && (stats[i].j > 0 || stats[j].j > 0)) {
+            existeEmpate = true;
+          }
+        }
+      }
+
+      tieWarning.style.display = existeEmpate ? "block" : "none";
+
+      // Ordena classificação:
+      // 1) Pontos desc
+      // 2) Vitórias desc
+      // 3) Saldo de gols desc
+      // 4) Gols pró desc
+      // 5) Menor gols contra
+      const sorted = stats.slice().sort((a, b) => {
+        if (b.pts !== a.pts) return b.pts - a.pts;
+        if (b.v !== a.v) return b.v - a.v;
+        if (b.sg !== a.sg) return b.sg - a.sg;
+        if (b.gp !== a.gp) return b.gp - a.gp;
+        if (a.gc !== b.gc) return a.gc - b.gc;
+        return a.index - b.index;
+      });
+
+      // Renderiza tabela
+      tbodyTabela.innerHTML = "";
+      sorted.forEach((team, pos) => {
+        const tr = document.createElement("tr");
+        if (pos === 0) {
+          tr.classList.add("leader");
+        }
+        tr.innerHTML = `
+          <td>${pos + 1}</td>
+          <td class="team-name">${team.nome}</td>
+          <td>${team.j}</td>
+          <td>${team.v}</td>
+          <td>${team.e}</td>
+          <td>${team.d}</td>
+          <td>${team.gp}</td>
+          <td>${team.gc}</td>
+          <td>${team.sg}</td>
+          <td>${team.pts}</td>
+        `;
+        tbodyTabela.appendChild(tr);
+      });
+    }
+
+    // Limpa todos os placares
+    function limparTudo() {
+      const rows = matchesContainer.querySelectorAll(".match-row");
+      rows.forEach((row) => {
+        row.querySelector(".score-home").value = "";
+        row.querySelector(".score-away").value = "";
+      });
+      recalcularTabela();
+    }
+
+    // Eventos
+    btnRecalcular.addEventListener("click", recalcularTabela);
+    btnLimpar.addEventListener("click", () => {
+      if (confirm("Limpar todos os placares do quadrangular?")) {
+        limparTudo();
+      }
+    });
+
+    // Recalcular sempre que digitar placar
+    matchesContainer.querySelectorAll("input[type='number']").forEach((inp) => {
+      inp.addEventListener("input", () => {
+        recalcularTabela();
+      });
+    });
+
+    // Estado inicial
+    atualizarNomesNosJogos();
+    recalcularTabela();
+  </script>
+</body>
+</html>
