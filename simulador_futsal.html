@@ -229,15 +229,15 @@
 <body>
   <div class="app">
     <h1>Quadrangular Sub-15</h1>
-    <div class="subtitle">Simulador de classificação - pontos corridos</div>
-    <div class="badge">Categoria Sub-15 · 2 tempos de 15 min (cronômetro) </div>
+    <div class="subtitle">Simulador de classificação - pontos corridos (v2 salvo)</div>
+    <div class="badge">Categoria Sub-15 · 2 tempos de 15 min (cronômetro)</div>
 
     <!-- Nomes dos times -->
     <div class="section-title">Times</div>
     <div class="teams-grid">
       <div>
         <label for="t1">Time 1</label>
-        <input type="text" id="t1" value="TuiutiB" />
+        <input type="text" id="t1" value="Time A" />
       </div>
       <div>
         <label for="t2">Time 2</label>
@@ -353,7 +353,9 @@
 
     <div class="note">
       Pontos usados no simulador: <strong>Vitória = 3 · Empate = 1 · Derrota = 0</strong> (padrão futsal).
-      Ajuste manualmente se o regulamento da etapa usar pontuação diferente.
+    </div>
+    <div class="note" id="saveStatus">
+      <!-- Aqui aparece se os dados foram carregados/salvos -->
     </div>
 
     <div class="footer">
@@ -384,6 +386,81 @@
     const tieWarning = document.getElementById("tieWarning");
     const btnRecalcular = document.getElementById("btnRecalcular");
     const btnLimpar = document.getElementById("btnLimpar");
+    const saveStatus = document.getElementById("saveStatus");
+
+    // ---- Salvar / carregar estado (times + placares) ----
+    const STORAGE_KEY = "futsal_quadrangular_v2";
+
+    function saveState() {
+      const teamNames = teamInputs.map(inp => inp.value);
+
+      const rows = matchesContainer.querySelectorAll(".match-row");
+      const matches = [];
+      rows.forEach((row) => {
+        const homeInput = row.querySelector(".score-home");
+        const awayInput = row.querySelector(".score-away");
+        matches.push({
+          home: homeInput.value,
+          away: homeInput.value === "" && awayInput.value === "" ? "" : awayInput.value,
+        });
+      });
+
+      const data = { teamNames, matches };
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        if (saveStatus) {
+          saveStatus.textContent = "Dados salvos neste navegador ✔";
+        }
+      } catch (e) {
+        console.error("Erro ao salvar estado:", e);
+        if (saveStatus) {
+          saveStatus.textContent = "Erro ao salvar dados neste navegador.";
+        }
+      }
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+          if (saveStatus) {
+            saveStatus.textContent = "Nenhum dado salvo neste navegador ainda.";
+          }
+          return;
+        }
+
+        const data = JSON.parse(raw);
+
+        if (Array.isArray(data.teamNames)) {
+          data.teamNames.forEach((name, idx) => {
+            if (teamInputs[idx]) {
+              teamInputs[idx].value = name;
+            }
+          });
+        }
+
+        if (Array.isArray(data.matches)) {
+          const rows = matchesContainer.querySelectorAll(".match-row");
+          rows.forEach((row, idx) => {
+            const info = data.matches[idx];
+            if (!info) return;
+            const homeInput = row.querySelector(".score-home");
+            const awayInput = row.querySelector(".score-away");
+            if (info.home !== undefined) homeInput.value = info.home;
+            if (info.away !== undefined) awayInput.value = info.away;
+          });
+        }
+
+        if (saveStatus) {
+          saveStatus.textContent = "Dados carregados deste navegador ✔";
+        }
+      } catch (e) {
+        console.error("Erro ao carregar estado:", e);
+        if (saveStatus) {
+          saveStatus.textContent = "Erro ao carregar dados salvos.";
+        }
+      }
+    }
 
     // Atualiza os nomes nos "versus" dos jogos
     function atualizarNomesNosJogos() {
@@ -400,7 +477,7 @@
     teamInputs.forEach((inp) => {
       inp.addEventListener("input", () => {
         atualizarNomesNosJogos();
-        recalcularTabela();
+        recalcularTabela(); // recalcular já chama saveState()
       });
     });
 
@@ -408,7 +485,7 @@
     function recalcularTabela() {
       // Inicializa stats
       const stats = [
-        { index: 0, nome: teamInputs[0].value || "Tuiuti", j: 0, v: 0, e: 0, d: 0, gp: 0, gc: 0, sg: 0, pts: 0 },
+        { index: 0, nome: teamInputs[0].value || "Time A", j: 0, v: 0, e: 0, d: 0, gp: 0, gc: 0, sg: 0, pts: 0 },
         { index: 1, nome: teamInputs[1].value || "Time B", j: 0, v: 0, e: 0, d: 0, gp: 0, gc: 0, sg: 0, pts: 0 },
         { index: 2, nome: teamInputs[2].value || "Time C", j: 0, v: 0, e: 0, d: 0, gp: 0, gc: 0, sg: 0, pts: 0 },
         { index: 3, nome: teamInputs[3].value || "Time D", j: 0, v: 0, e: 0, d: 0, gp: 0, gc: 0, sg: 0, pts: 0 },
@@ -474,12 +551,7 @@
 
       tieWarning.style.display = existeEmpate ? "block" : "none";
 
-      // Ordena classificação:
-      // 1) Pontos desc
-      // 2) Vitórias desc
-      // 3) Saldo de gols desc
-      // 4) Gols pró desc
-      // 5) Menor gols contra
+      // Ordena classificação
       const sorted = stats.slice().sort((a, b) => {
         if (b.pts !== a.pts) return b.pts - a.pts;
         if (b.v !== a.v) return b.v - a.v;
@@ -510,15 +582,28 @@
         `;
         tbodyTabela.appendChild(tr);
       });
+
+      // Salva o estado atual (nomes + placares)
+      saveState();
     }
 
-    // Limpa todos os placares
+    // Limpa todos os placares e apaga o estado salvo
     function limparTudo() {
       const rows = matchesContainer.querySelectorAll(".match-row");
       rows.forEach((row) => {
         row.querySelector(".score-home").value = "";
         row.querySelector(".score-away").value = "";
       });
+
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+        if (saveStatus) {
+          saveStatus.textContent = "Dados apagados deste navegador.";
+        }
+      } catch (e) {
+        console.error("Erro ao limpar estado salvo:", e);
+      }
+
       recalcularTabela();
     }
 
@@ -537,7 +622,8 @@
       });
     });
 
-    // Estado inicial
+    // Estado inicial: carrega do localStorage (se existir)
+    loadState();
     atualizarNomesNosJogos();
     recalcularTabela();
   </script>
